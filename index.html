@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rolo — Your private notebook for the people you meet online</title>
+  <meta name="description" content="Private notes, tags, and follow-up reminders directly on the social profiles you visit. 100% local-first, zero automation, no account required." />
+  <style>
+    :root {
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --surface-muted: #f5f5f4;
+      --text: #1c1917;
+      --text-muted: #57534e;
+      --border: #e7e5e4;
+      --accent: #0f172a;
+      --accent-hover: #1e293b;
+      --highlight: #2563eb;
+      --highlight-soft: #eff6ff;
+      --success: #15803d;
+      --success-soft: #f0fdf4;
+      --radius: 12px;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--highlight); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header */
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      background: rgba(250, 250, 249, 0.85);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .nav-badge {
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 9px;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      text-decoration: none;
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 56px 0 40px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    @media (max-width: 820px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 36px 0 28px;
+      }
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--highlight);
+      background: var(--highlight-soft);
+      padding: 5px 11px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 4.4vw, 46px);
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      margin: 0 0 16px;
+    }
+
+    .lead {
+      font-size: 17px;
+      color: var(--text-muted);
+      margin: 0 0 24px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .hero-note {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Interactive Demo Card */
+    .demo-shell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .demo-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface-muted);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .dots { display: flex; gap: 6px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #d6d3d1; }
+
+    .demo-body {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .mock-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #334155, #0f172a);
+      color: #fff;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .mock-name { font-weight: 700; font-size: 15px; }
+    .mock-handle { font-size: 13px; color: var(--text-muted); }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag-pill {
+      font-size: 12px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-muted);
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.12s ease;
+    }
+
+    .tag-pill.active {
+      background: var(--highlight-soft);
+      border-color: #93c5fd;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .demo-notes {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .note-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .note-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .demo-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .demo-input-row input {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .demo-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding-top: 4px;
+    }
+
+    /* Sections */
+    section {
+      padding: 36px 0;
+    }
+
+    h2 {
+      font-size: 24px;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+    }
+
+    .section-sub {
+      color: var(--text-muted);
+      margin: 0 0 24px;
+      font-size: 15px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 720px) {
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Comparison Table */
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 560px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface-muted);
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr.highlight-row { background: #f8fafc; font-weight: 500; }
+
+    /* Waitlist Form */
+    .waitlist-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label.field-label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .field input[type="email"],
+    .field input[type="text"],
+    .field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      outline: 2px solid #bfdbfe;
+      border-color: var(--highlight);
+    }
+
+    .radio-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: border-color 0.12s ease, background 0.12s ease;
+    }
+
+    .radio-option:hover {
+      background: var(--bg);
+      border-color: #cbd5e1;
+    }
+
+    .radio-option input { margin: 0; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 10px 12px;
+      background: var(--surface-muted);
+      border-radius: 8px;
+    }
+
+    .form-status {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .form-status.success {
+      display: block;
+      background: var(--success-soft);
+      border: 1px solid #bbf7d0;
+      color: var(--success);
+    }
+
+    .form-status.error {
+      display: block;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+    }
+
+    .dev-banner {
+      display: none;
+      background: #fefce8;
+      border: 1px solid #fde047;
+      color: #854d0e;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0 44px;
+      margin-top: 32px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <span class="brand-mark">R</span>
+        <span>Rolo</span>
+        <span class="nav-badge">Early Access</span>
+      </div>
+      <a href="#waitlist" class="btn btn-primary btn-sm">Join Waitlist</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Local-first browser extension · No account required</div>
+        <h1>Your private notebook for the people you meet online.</h1>
+        <p class="lead">
+          Add private notes, tags, and follow-up reminders directly on X (and soon LinkedIn) profiles.
+          Built as a lightweight, local-first replacement after BlackMagic shut down — zero automation, zero scraping, 100% stored in your browser.
+        </p>
+        <div class="hero-actions">
+          <a href="#waitlist" class="btn btn-primary">Get early access &rarr;</a>
+          <span class="hero-note">Free up to 50 contacts · Pro $9/mo or $49 one-time</span>
+        </div>
+      </div>
+
+      <!-- Interactive Mock Widget -->
+      <div class="demo-shell" aria-label="Interactive preview">
+        <div class="demo-topbar">
+          <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <span>x.com/alex_builds · Rolo side panel</span>
+        </div>
+        <div class="demo-body">
+          <div class="mock-profile">
+            <div class="avatar">AB</div>
+            <div>
+              <div class="mock-name">Alex Rivera</div>
+              <div class="mock-handle">@alex_builds · Indie maker</div>
+            </div>
+          </div>
+
+          <div class="tag-row" id="demo-tags">
+            <span class="tag-pill active" data-tag="Founder">Founder</span>
+            <span class="tag-pill active" data-tag="Beta Tester">Beta Tester</span>
+            <span class="tag-pill" data-tag="Warm Lead">Warm Lead</span>
+            <span class="tag-pill" data-tag="Podcast">Podcast</span>
+          </div>
+
+          <div class="demo-notes" id="demo-notes">
+            <div class="note-item">
+              <div class="note-meta">Nov 20 · Local IndexedDB</div>
+              Met in #buildinpublic thread. Offered to try v1 once Chrome extension is ready.
+            </div>
+          </div>
+
+          <div class="demo-input-row">
+            <input id="demo-input" type="text" placeholder="Try typing a quick note and hit Enter..." />
+            <button id="demo-add" type="button" class="btn btn-primary btn-sm">Save</button>
+          </div>
+
+          <div class="demo-footer">
+            <span>Follow-up: Dec 1 · Browser alarm</span>
+            <span>Stored locally · Export CSV/JSON</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Principles -->
+    <section>
+      <h2>Not another bloated CRM</h2>
+      <p class="section-sub">Just a fast personal notebook right where you already spend your time.</p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>100% Local-first</h3>
+          <p>Your notes stay in your browser's IndexedDB. No cloud database, no tracking, no account signup required. Export CSV or JSON anytime.</p>
+        </div>
+        <div class="card">
+          <h3>Zero automation</h3>
+          <p>No auto-DMs, no auto-follows, no background scraping. Rolo only reads the profile you are actively viewing so your account stays safe.</p>
+        </div>
+        <div class="card">
+          <h3>Fair indie pricing</h3>
+          <p>Free for up to 50 contacts. Need more? $9/mo or a simple $49 one-time purchase (early bird $39 for the first 100 supporters).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison -->
+    <section>
+      <h2>How Rolo compares</h2>
+      <p class="section-sub">An honest look at where Rolo fits — and what it intentionally does not do.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Focus</th>
+              <th>Pricing</th>
+              <th>Data Storage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td><strong>Rolo (this)</strong></td>
+              <td>Private notes, tags &amp; follow-up reminders</td>
+              <td>Free (50) · $9/mo or $49 one-time</td>
+              <td>Local browser (IndexedDB)</td>
+            </tr>
+            <tr>
+              <td>BlackMagic</td>
+              <td>Analytics + Personal CRM for X</td>
+              <td>Shut down (Jul 2026)</td>
+              <td>Cloud</td>
+            </tr>
+            <tr>
+              <td>Tweet Hunter</td>
+              <td>Content growth suite + CRM</td>
+              <td>From ~$49/mo</td>
+              <td>Cloud</td>
+            </tr>
+            <tr>
+              <td>Kondo</td>
+              <td>LinkedIn DM inbox workspace</td>
+              <td>From ~$28–35/mo</td>
+              <td>Cloud</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Waitlist + Micro-survey -->
+    <section id="waitlist">
+      <div class="waitlist-card">
+        <h2>Join the early access waitlist</h2>
+        <p class="section-sub" style="margin-bottom: 20px;">
+          Takes 20 seconds. Answering 3 quick questions helps shape the MVP (and locks in the $39 founder deal if you ever upgrade).
+        </p>
+
+        <div id="dev-banner" class="dev-banner">
+          <strong>Setup reminder:</strong> Replace <code>FORM_ENDPOINT</code> in <code>index.html</code> with your Formspree / Tally / webhook URL before deploying. Submissions currently run in local demo mode.
+        </div>
+
+        <form id="waitlist-form">
+          <div class="field">
+            <label class="field-label" for="email">Email address *</label>
+            <input id="email" name="email" type="email" required placeholder="you@domain.com" />
+          </div>
+
+          <div class="field">
+            <label class="field-label">1. What do you currently use to keep track of people on X / LinkedIn? *</label>
+            <div class="radio-grid">
+              <label class="radio-option">
+                <input type="radio" name="current_tool" value="former_blackmagic" required />
+                <span>Used BlackMagic — still looking for a replacement</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="current_tool" value="notion_sheets" />
+                <span>Notion, Apple Notes, or a spreadsheet</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="current_tool" value="paid_crm" />
+                <span>Tweet Hunter, Kondo, Folk, or a full CRM</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="current_tool" value="memory" />
+                <span>Just my memory (and constantly forgetting context)</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="current_tool" value="other" />
+                <span>Other</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">2. Which platform do you need first? *</label>
+            <div class="radio-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+              <label class="radio-option">
+                <input type="radio" name="platform" value="x" required />
+                <span>X (Twitter)</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="platform" value="linkedin" />
+                <span>LinkedIn</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="platform" value="both" />
+                <span>Both X &amp; LinkedIn</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">3. If Rolo nails this, which pricing feels fair to you? *</label>
+            <div class="radio-grid">
+              <label class="radio-option">
+                <input type="radio" name="pricing" value="one_time_39_49" required />
+                <span>$39–$49 one-time purchase</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="pricing" value="monthly_9" />
+                <span>$9/month subscription</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="pricing" value="free_50" />
+                <span>Free tier (up to 50 contacts) is enough for me</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="pricing" value="no_pay" />
+                <span>Wouldn't pay for this</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="checkbox-row">
+              <input type="checkbox" name="has_blackmagic_csv" value="yes" />
+              <span>I still have my BlackMagic CSV export and want 1-click import</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="notes">Anything specific you want Rolo to do? (optional)</label>
+            <textarea id="notes" name="notes" rows="2" placeholder="e.g., remind me to follow up in 2 weeks, tag podcast guests, etc."></textarea>
+          </div>
+
+          <button id="submit-btn" type="submit" class="btn btn-primary" style="width: 100%;">
+            Request Early Access
+          </button>
+
+          <div id="form-status" class="form-status" role="status"></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <div>
+        <strong>Rolo</strong> · Local-first personal relationship notebook.
+      </div>
+      <div>
+        Unofficial independent tool. Not affiliated with X Corp., LinkedIn, or BlackMagic.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // =========================================================================
+    // CONFIGURATION: Paste your Formspree (https://formspree.io) or webhook URL
+    // Example: const FORM_ENDPOINT = "https://formspree.io/f/your_form_id";
+    // Leave empty "" to run in local demo mode.
+    // =========================================================================
+    const FORM_ENDPOINT = "";
+
+    // Show setup reminder when opened locally without endpoint configured
+    if (!FORM_ENDPOINT && (location.protocol === "file:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+      document.getElementById("dev-banner").style.display = "block";
+    }
+
+    // Interactive preview widget
+    document.getElementById("demo-tags").addEventListener("click", (e) => {
+      if (e.target.classList.contains("tag-pill")) {
+        e.target.classList.toggle("active");
+      }
+    });
+
+    const demoInput = document.getElementById("demo-input");
+    const demoNotes = document.getElementById("demo-notes");
+    function addDemoNote() {
+      const text = demoInput.value.trim();
+      if (!text) return;
+      const item = document.createElement("div");
+      item.className = "note-item";
+      item.innerHTML = `<div class="note-meta">Just now · Saved locally</div>${text.replace(/</g, "&lt;")}`;
+      demoNotes.prepend(item);
+      demoInput.value = "";
+    }
+    document.getElementById("demo-add").addEventListener("click", addDemoNote);
+    demoInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addDemoNote();
+      }
+    });
+
+    // Waitlist form handling
+    const form = document.getElementById("waitlist-form");
+    const statusEl = document.getElementById("form-status");
+    const submitBtn = document.getElementById("submit-btn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      statusEl.className = "form-status";
+      statusEl.textContent = "";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+      payload.has_blackmagic_csv = formData.get("has_blackmagic_csv") ? "yes" : "no";
+      payload.submitted_at = new Date().toISOString();
+
+      try {
+        if (!FORM_ENDPOINT) {
+          // Demo mode fallback
+          await new Promise((r) => setTimeout(r, 350));
+          console.log("[Rolo Waitlist Demo Submission]", payload);
+          statusEl.className = "form-status success";
+          statusEl.textContent = "You're on the list! (Demo mode — configure FORM_ENDPOINT to collect live responses.)";
+          form.reset();
+        } else {
+          const res = await fetch(FORM_ENDPOINT, {
+            method: "POST",
+            headers: { "Accept": "application/json", "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) throw new Error("Submission failed");
+          statusEl.className = "form-status success";
+          statusEl.textContent = "You're on the list! Thanks for answering — I'll reach out as soon as the beta build is ready.";
+          form.reset();
+        }
+      } catch (err) {
+        statusEl.className = "form-status error";
+        statusEl.textContent = "Something went wrong sending the form. Please try again or DM me on X.";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Request Early Access";
+      }
+    });
+  </script>
+</body>
+</html>
